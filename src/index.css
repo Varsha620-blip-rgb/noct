@@ -307,6 +307,24 @@ select:focus {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
+  
+  /* Mobile table improvements */
+  .mobile-table-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    backdrop-filter: blur(10px);
+  }
+  
+  /* Mobile responsive text */
+  .mobile-text-sm {
+    font-size: 0.75rem;
+  }
+  
+  .mobile-text-xs {
+    font-size: 0.625rem;
+  }
 }
 
 @media (min-width: 641px) and (max-width: 1024px) {
@@ -320,5 +338,47 @@ select:focus {
   .grid-responsive {
     grid-template-columns: repeat(4, 1fr);
     gap: 2rem;
+  }
+}
+
+/* Avatar hover zoom effect */
+.avatar-hover {
+  transition: transform 0.3s ease;
+}
+
+.avatar-hover:hover {
+  transform: scale(1.25);
+}
+
+/* Message notification styles */
+.message-notification {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.message-notification:hover {
+  transform: translateX(-5px);
+}
+
+/* Mobile responsive improvements */
+@media (max-width: 768px) {
+  .mobile-card {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+  
+  .mobile-button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .mobile-input {
+    padding: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }

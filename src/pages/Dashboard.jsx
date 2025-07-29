@@ -335,21 +335,21 @@ function Dashboard() {
                   style={{
                     boxShadow: '-10px 9px 10px #072D44'
                   }}>
-                  <div className="flex flex-col justify-between">
-                    <h1 className="ml-10 text-5xl font-300" >Hi, {currentUser?.displayName || 'User'}!</h1>
-                    <p className="mt-4 ml-10 text-2xl text-md text-[#064469]/80">What are you doing today?</p>
+                  <div className="flex flex-col justify-between flex-1">
+                    <h1 className="ml-4 md:ml-10 text-2xl md:text-5xl font-300" >Hi, {currentUser?.displayName || 'User'}!</h1>
+                    <p className="mt-2 md:mt-4 ml-4 md:ml-10 text-lg md:text-2xl text-md text-[#064469]/80">What are you doing today?</p>
                     <div className="flex items-center gap-4 mt-5">
-                      <svg width="55" height="75" viewBox="-20 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg" >
+                      <svg width="35" height="45" viewBox="-20 0 60 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="md:w-[55px] md:h-[75px]">
                         <path d="M30.1778 0.0603638C34.6374 2.92422 36.1239 7.22 36.1239 10.0838C36.1239 21.5393 36.1239 32.9947 33.1509 43.0182L31.6643 32.9947C27.2047 35.8585 21.2586 38.7224 18.2855 38.7224C15.3125 38.7224 9.36632 35.8585 4.90671 32.9947L3.42018 43.0182C0.447113 32.9947 0.447113 21.5393 0.447113 10.0838C0.447113 7.22 1.93365 2.92422 6.39325 0.0603638C4.90671 4.35614 4.90671 8.65192 6.39325 11.5158C12.3394 8.65192 24.2317 8.65192 30.1778 11.5158C31.6643 8.65192 31.6643 4.35614 30.1778 0.0603638ZM30.1778 22.9712C27.0468 27.1596 25.3466 28.0903 19.7721 30.1308C22.8845 32.9947 28.6448 32.055 31.6643 28.6989C32.9743 27.2401 32.2961 24.7074 30.1778 22.9712ZM6.39325 22.9712C4.27494 24.7074 3.59671 27.2401 4.90671 28.6989C7.92624 32.055 13.6866 32.9947 16.799 30.1308C11.2245 28.0903 9.52426 27.1596 6.39325 22.9712Z" fill="#072D44"/>
                       </svg>
-                      <div className='ml-3 text-[#064469] text-11xl'>
+                      <div className='ml-1 md:ml-3 text-[#064469] text-sm md:text-base'>
                         Sup there! Still thinking? <br />
-                        <span className='text-[#064469]/80 text-10xl'>Let's chat!</span>
+                        <span className='text-[#064469]/80'>Let's chat!</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-center p-4 mr-10 border-2 border-[#064469] bg-white rounded-3xl ">
-                    <h1 className="text-[9rem]">{userAvatar}</h1>
+                  <div className="flex items-center justify-center p-2 md:p-4 mr-4 md:mr-10 border-2 border-[#064469] bg-white rounded-3xl avatar-hover">
+                    <h1 className="text-4xl md:text-[9rem]">{userAvatar}</h1>
                   </div>
                 </div>
               </div>

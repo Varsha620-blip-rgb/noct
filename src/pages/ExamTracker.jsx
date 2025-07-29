@@ -166,8 +166,37 @@ function ExamTracker() {
             </div>
             
             {/* Mobile-friendly table */}
-            <div className="p-4 overflow-x-auto bg-white/20 rounded-xl">
-              <table className="w-full text-center min-w-[600px]">
+            <div className="p-2 md:p-4 overflow-x-auto bg-white/20 rounded-xl">
+              <div className="block md:hidden space-y-3">
+                {exams.map(exam => (
+                  <div key={exam.id} className="bg-white/30 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-medium text-[#072D44]">{exam.subject}</h3>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleEdit(exam)}
+                          className="px-2 py-1 text-xs text-white bg-[#064469] rounded hover:bg-[#072D44]"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(exam.id)}
+                          className="px-2 py-1 text-xs bg-[#072D44] text-white rounded hover:bg-[#064469]"
+                        >
+                          Del
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm text-[#064469]">Date: {formatDate(exam.examDate)}</p>
+                    <p className="text-sm text-[#064469]">Portions: {exam.portions || 'Not specified'}</p>
+                  </div>
+                ))}
+                {exams.length === 0 && (
+                  <div className="py-8 text-center text-[#072D44]/70">No exams scheduled</div>
+                )}
+              </div>
+              
+              <table className="hidden md:table w-full text-center min-w-[600px]">
                 <thead>
                   <tr className="text-lg font-normal text-[#072D44] border-b md:text-xl border-[#072D44]/30">
                     <th className="py-3">Subject</th>

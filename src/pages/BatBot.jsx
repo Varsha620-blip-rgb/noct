@@ -9,6 +9,24 @@ function BatBot() {
   const [chatHistory, setChatHistory] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const { currentUser } = useAuth();
+
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    if (currentUser) {
+      const savedHistory = localStorage.getItem(`batbot_history_${currentUser.uid}`);
+      if (savedHistory) {
+        setChatHistory(JSON.parse(savedHistory));
+      }
+    }
+  }, [currentUser]);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    if (currentUser && chatHistory.length > 0) {
+      localStorage.setItem(`batbot_history_${currentUser.uid}`, JSON.stringify(chatHistory));
+    }
+  }, [chatHistory, currentUser]);
 
   const handleAskBatBot = async (e) => {
     if (e) e.preventDefault();
@@ -55,14 +73,17 @@ function BatBot() {
       // ⌛ Chat history tracking
       if (!currentChatId) {
         const newChatId = Date.now();
+        const newChatData = {
+          id: newChatId,
+          title: userMsg.substring(0, 30) + (userMsg.length > 30 ? '...' : ''),
+          lastMessage: reply.substring(0, 50) + (reply.length > 50 ? '...' : ''),
+          messages: finalChat,
+          timestamp: new Date()
+        };
         setCurrentChatId(newChatId);
         setChatHistory(prev => [
-          ...prev,
-          {
-            id: newChatId,
-            title: userMsg.substring(0, 30) + (userMsg.length > 30 ? '...' : ''),
-            lastMessage: reply.substring(0, 50) + (reply.length > 50 ? '...' : '')
-          }
+          newChatData,
+          ...prev
         ]);
       } else {
         setChatHistory(prev =>
@@ -70,7 +91,9 @@ function BatBot() {
             item.id === currentChatId
               ? {
                   ...item,
-                  lastMessage: reply.substring(0, 50) + (reply.length > 50 ? '...' : '')
+                  lastMessage: reply.substring(0, 50) + (reply.length > 50 ? '...' : ''),
+                  messages: finalChat,
+                  timestamp: new Date()
                 }
               : item
           )
@@ -95,6 +118,10 @@ function BatBot() {
   };
 
   const loadChatHistory = (chatId) => {
+    const selectedChat = chatHistory.find(chat => chat.id === chatId);
+    if (selectedChat && selectedChat.messages) {
+      setChat(selectedChat.messages);
+    }
     setCurrentChatId(chatId);
     setShowHistory(false);
   };

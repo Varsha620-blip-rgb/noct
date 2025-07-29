@@ -54,6 +54,37 @@ function NewGroupModal({ isOpen, onClose, onCreate, friends = [] }) {
     setError('');
   };
 
+  const handleLeaveGroup = async () => {
+    if (!currentUser || !activeGroupId) return;
+    
+    if (window.confirm('Are you sure you want to leave this group?')) {
+      try {
+        const groupRef = doc(db, 'groups', activeGroupId);
+        const groupDoc = await getDoc(groupRef);
+        
+        if (groupDoc.exists()) {
+          const groupData = groupDoc.data();
+          const updatedMembers = groupData.members.filter(member => member !== currentUser.uid);
+          
+          if (updatedMembers.length === 0) {
+            // Delete group if no members left
+            await deleteDoc(groupRef);
+          } else {
+            // Update group members
+            await updateDoc(groupRef, {
+              members: updatedMembers
+            });
+          }
+          
+          setActiveGroupId(null);
+          setShowChatView(false);
+        }
+      } catch (error) {
+        console.error('Error leaving group:', error);
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   return (

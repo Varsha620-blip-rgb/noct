@@ -6,7 +6,7 @@ import NotificationsPanel from '../components/NotificationPanel';
 import NewGroupModal from '../components/NewGroupModal';
 import { 
   collection, query, orderBy, onSnapshot, addDoc, 
-  serverTimestamp, where, getDocs, doc, updateDoc 
+  serverTimestamp, where, getDocs, doc, updateDoc, getDoc, deleteDoc
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,7 @@ function NotifyFriends() {
   const [showChatView, setShowChatView] = useState(false);
   const [friends, setFriends] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [newMessageNotifications, setNewMessageNotifications] = useState([]);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll to bottom when messages update
@@ -116,13 +117,34 @@ function NotifyFriends() {
         ...doc.data(),
         timestamp: doc.data().timestamp?.toDate()
       }));
+      
+      // Check for new messages
+      if (msgs.length > messages.length && messages.length > 0) {
+        const newMsg = msgs[msgs.length - 1];
+        if (newMsg.senderId !== currentUser?.uid) {
+          const group = groups.find(g => g.id === activeGroupId);
+          setNewMessageNotifications(prev => [...prev, {
+            id: Date.now(),
+            groupName: group?.name || 'Unknown Group',
+            senderName: newMsg.senderName,
+            message: newMsg.text,
+            timestamp: new Date()
+          }]);
+          
+          // Auto-remove notification after 5 seconds
+          setTimeout(() => {
+            setNewMessageNotifications(prev => prev.filter(n => n.id !== Date.now()));
+          }, 5000);
+        }
+      }
+      
       setMessages(msgs);
     }, (error) => {
       console.error("Error fetching messages:", error);
     });
 
     return () => unsubscribe();
-  }, [activeGroupId]);
+  }, [activeGroupId, messages.length, currentUser, groups]);
 
   // Fetch user's groups with real-time updates
   useEffect(() => {
@@ -234,6 +256,37 @@ function NotifyFriends() {
     }
   };
 
+  const handleLeaveGroup = async () => {
+    if (!currentUser || !activeGroupId) return;
+    
+    if (window.confirm('Are you sure you want to leave this group?')) {
+      try {
+        const groupRef = doc(db, 'groups', activeGroupId);
+        const groupDoc = await getDoc(groupRef);
+        
+        if (groupDoc.exists()) {
+          const groupData = groupDoc.data();
+          const updatedMembers = groupData.members.filter(member => member !== currentUser.uid);
+          
+          if (updatedMembers.length === 0) {
+            // Delete group if no members left
+            await deleteDoc(groupRef);
+          } else {
+            // Update group members
+            await updateDoc(groupRef, {
+              members: updatedMembers
+            });
+          }
+          
+          setActiveGroupId(null);
+          setShowChatView(false);
+        }
+      } catch (error) {
+        console.error('Error leaving group:', error);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col w-full min-h-screen bg-white md:flex-row">
       {/* Sidebar */}
@@ -342,9 +395,12 @@ function NotifyFriends() {
                           <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                         </svg>
                       </button>
-                      <button className="p-2 transition-colors rounded-full hover:bg-white/20">
+                      <button 
+                        onClick={handleLeaveGroup}
+                        className="p-2 text-red-300 transition-colors rounded-full hover:bg-red-500/20 hover:text-red-200"
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
                       </button>
                     </div>
@@ -486,6 +542,15 @@ function NotifyFriends() {
                           <h3 className="font-bold">{activeGroup.name}</h3>
                           <p className="text-sm opacity-80">{getMemberNames(activeGroup).join(', ')}</p>
                         </div>
+                        <button 
+                          onClick={handleLeaveGroup}
+                          className="p-2 text-red-300 transition-colors rounded-full hover:bg-red-500/20 hover:text-red-200"
+                          title="Leave Group"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                     
@@ -571,6 +636,32 @@ function NotifyFriends() {
         friends={friends}
         onCreate={handleCreateGroup}
       />
+
+      {/* New Message Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {newMessageNotifications.map((notification) => (
+          <div
+            key={notification.id}
+            className="bg-[#064469] text-white p-4 rounded-lg shadow-lg max-w-sm animate-slideInRight"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-[#5790AB] rounded-full flex items-center justify-center text-sm font-bold">
+                💬
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">New message in {notification.groupName}</p>
+                <p className="text-xs opacity-80">{notification.senderName}: {notification.message.substring(0, 50)}...</p>
+              </div>
+              <button
+                onClick={() => setNewMessageNotifications(prev => prev.filter(n => n.id !== notification.id))}
+                className="text-white/60 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

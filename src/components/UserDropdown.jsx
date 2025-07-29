@@ -67,7 +67,7 @@ function UserDropdown() {
           className="p-2 transition-all duration-200 transform cursor-pointer hover:scale-110"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#9CCDDB] text-lg hover:from-[#5790AB] hover:to-[#1A3D63] transition-all duration-200 hover:shadow-lg">
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-[#9CCDDB] text-lg hover:from-[#5790AB] hover:to-[#1A3D63] transition-all duration-200 hover:shadow-lg hover:scale-125 transform">
             <span className="text-2xl">{selectedAvatar}</span>
           </span>
         </div>

@@ -211,7 +211,9 @@ function ExpenseTracker() {
         if (bill.paidBy?.some(person => person.uid === currentUser.uid)) {
           paid += share;
         } else {
-          owe += share;
+          if (bill.status !== 'Paid') {
+            owe += share;
+          }
         }
       }
     });
@@ -395,7 +397,7 @@ function ExpenseTracker() {
             </div>
 
             {/* Action Cards */}
-            <div className="flex flex-col gap-4 md:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <div className="flex flex-col justify-between bg-gradient-to-br from-[#064469] to-[#5790AB] p-4 md:p-6 rounded-2xl shadow-lg flex-1 card-hover animate-slideInLeft" style={{ animationDelay: '0.3s' }}>
                 <div>
                   <svg width="60" height="60" viewBox="0 0 81 81" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -441,8 +443,122 @@ function ExpenseTracker() {
             </div>
 
             {/* Transactions Table */}
-            <div className="p-4 overflow-x-auto bg-white/10 rounded-xl glass">
-              <table className="w-full text-left min-w-[500px]">
+            <div className="p-2 md:p-4 overflow-x-auto bg-white/10 rounded-xl glass">
+              {/* Mobile View */}
+              <div className="block md:hidden space-y-3">
+                {bills.slice(0, 10).map((bill, index) => (
+                  <div key={bill.id} className="bg-white/10 rounded-lg p-3 space-y-2 animate-slideInUp" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex gap-1 flex-wrap">
+                        <span className={`bg-white/20 text-white px-2 py-1 rounded-full text-xs font-semibold ${
+                          bill.createdBy === currentUser.uid ? 'bg-[#9CCDDB] text-[#072D44]' : 'bg-[#D0D7E1] text-[#072D44]'
+                        }`}>
+                          {bill.createdBy === currentUser.uid ? 'You' : 'Friend'}
+                        </span>
+                        {bill.splitTo && bill.splitTo.length > 0 && (
+                          bill.splitTo.map((person, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-1 text-xs font-semibold text-white rounded-full bg-white/20"
+                              title={person.name}
+                            >
+                              {person.name?.split(' ').map(w => w[0]).join('').toUpperCase() || person.uid?.substring(0, 2).toUpperCase()}
+                            </span>
+                          ))
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setExpandedBillId(bill.id === expandedBillId ? null : bill.id)}
+                          className="text-sm text-white transition-colors transform hover:text-gray-200 hover:scale-110"
+                        >
+                          {bill.id === expandedBillId ? '▲' : '▼'}
+                        </button>
+                        {bill.createdBy === currentUser.uid && (
+                          <button
+                            onClick={() => deleteBill(bill.id)}
+                            className="text-sm text-red-300 transition-colors transform hover:text-red-100 hover:scale-110"
+                          >
+                            🗑️
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-white">
+                      <p className="font-medium">₹{bill.amount}</p>
+                      <p className="text-sm opacity-80 truncate">{bill.description}</p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <button
+                        onClick={() => toggleStatus(bill.id, bill.status)}
+                        className={`px-3 py-1 text-xs text-white rounded-full transition-all transform hover:scale-105 ${
+                          bill.status === 'Paid' ? 'bg-green-500/80 hover:bg-green-600' : 'bg-red-500/80 hover:bg-red-600'
+                        }`}
+                      >
+                        {bill.status || 'Pending'}
+                      </button>
+                      <span className="text-xs text-white/60">
+                        {bill.createdAt?.toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    {expandedBillId === bill.id && (
+                      <div className="mt-3 p-3 rounded-lg bg-white/5 animate-slideInDown">
+                        <div className="space-y-2">
+                          <h5 className="flex items-center gap-2 font-medium text-white text-sm">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            Payment Details:
+                          </h5>
+                          <div className="space-y-1">
+                            {/* Creator payment status */}
+                            <div className="flex items-center justify-between px-2 py-1 transition-colors rounded bg-white/10">
+                              <span className="text-sm text-white">
+                                {bill.createdBy === currentUser.uid ? 'You (Creator)' : 'Creator'}
+                              </span>
+                              <span className="px-2 py-1 text-xs font-medium text-white bg-green-500 rounded-full">
+                                Paid ✓
+                              </span>
+                            </div>
+                            
+                            {/* Split members payment status */}
+                            {bill.splitTo?.map((person, idx) => (
+                              <div key={idx} className="flex items-center justify-between px-2 py-1 transition-colors rounded bg-white/10">
+                                <span className="text-sm text-white">{person.name}</span>
+                                <button
+                                  onClick={() => togglePaymentStatus(bill.id, person.uid, bill.paidBy || [])}
+                                  className={`px-2 py-1 text-xs rounded-full font-medium transition-all transform hover:scale-105 ${
+                                    (bill.paidBy || []).some(p => p.uid === person.uid) 
+                                      ? 'bg-green-500 text-white hover:bg-green-600' 
+                                      : 'bg-red-500 text-white hover:bg-red-600'
+                                  }`}
+                                >
+                                  {(bill.paidBy || []).some(p => p.uid === person.uid) ? 'Paid ✓' : 'Pending'}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 text-xs text-white/70">
+                            Created: {bill.createdAt?.toLocaleDateString()} at {bill.createdAt?.toLocaleTimeString()}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {bills.length === 0 && (
+                  <div className="py-8 text-center text-white/70">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    No transactions yet. Start by adding your first bill!
+                  </div>
+                )}
+              </div>
+              
+              {/* Desktop Table */}
+              <table className="hidden md:table w-full text-left min-w-[500px]">
                 <thead className="font-medium text-white border-b-2 border-white/30">
                   <tr>
                     <th className="pb-2">Members</th>
@@ -552,16 +668,6 @@ function ExpenseTracker() {
                       )}
                     </>
                   ))}
-                  {bills.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-white/70">
-                        <svg className="w-16 h-16 mx-auto mb-4 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                        No transactions yet. Start by adding your first bill!
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
